@@ -34,7 +34,7 @@ const TelegramAuth = ({ onAuth }: TelegramAuthProps) => {
     const script = document.createElement('script');
     script.src = 'https://telegram.org/js/telegram-widget.js?22';
     script.async = true;
-    script.setAttribute('data-telegram-login', 'slotsfight_demo_bot');
+    script.setAttribute('data-telegram-login', 'SlotsFight_bot');
     script.setAttribute('data-size', 'large');
     script.setAttribute('data-radius', '8');
     script.setAttribute('data-request-access', 'write');
