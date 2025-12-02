@@ -1,0 +1,21 @@
+{
+  "tests": [
+    {
+      "name": "Test OPTIONS request for CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Test POST without bot token configured",
+      "method": "POST",
+      "path": "/",
+      "body": {},
+      "expectedStatus": 500,
+      "expectedBody": {
+        "error": "Bot token not configured"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

@@ -6,9 +6,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import Icon from '@/components/ui/icon';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import TelegramAuth from '@/components/TelegramAuth';
+
+interface TelegramUser {
+  user_id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
+  authenticated: boolean;
+}
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('main');
+  const [user, setUser] = useState<TelegramUser | null>(null);
   const [coins, setCoins] = useState(12450);
   const [rubies, setRubies] = useState(89);
   const [wheelSpinning, setWheelSpinning] = useState(false);
@@ -81,23 +92,25 @@ const Index = () => {
             </div>
             
             <div className="flex items-center gap-4">
-              <Card className="px-4 py-2 bg-gradient-to-r from-amber-500/20 to-amber-600/20 border-amber-500/30">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🪙</span>
-                  <span className="font-bold text-amber-400">{coins.toLocaleString()}</span>
-                </div>
-              </Card>
-              
-              <Card className="px-4 py-2 bg-gradient-to-r from-red-500/20 to-pink-600/20 border-red-500/30">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">💎</span>
-                  <span className="font-bold text-red-400">{rubies}</span>
-                </div>
-              </Card>
+              {user && (
+                <>
+                  <Card className="px-4 py-2 bg-gradient-to-r from-amber-500/20 to-amber-600/20 border-amber-500/30">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">🪙</span>
+                      <span className="font-bold text-amber-400">{coins.toLocaleString()}</span>
+                    </div>
+                  </Card>
+                  
+                  <Card className="px-4 py-2 bg-gradient-to-r from-red-500/20 to-pink-600/20 border-red-500/30">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">💎</span>
+                      <span className="font-bold text-red-400">{rubies}</span>
+                    </div>
+                  </Card>
+                </>
+              )}
 
-              <Button variant="ghost" size="icon" className="hover:bg-primary/10">
-                <Icon name="User" size={20} />
-              </Button>
+              <TelegramAuth onAuth={(userData) => setUser(userData)} />
             </div>
           </div>
         </div>
@@ -129,14 +142,45 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="main" className="space-y-8 animate-fade-in">
-            <div className="text-center space-y-4">
-              <h1 className="text-5xl font-bold gradient-purple bg-clip-text text-transparent">
-                Добро пожаловать в SlotsFight
-              </h1>
-              <p className="text-muted-foreground text-lg">
-                Испытай удачу в увлекательных играх и выиграй крупный приз!
-              </p>
-            </div>
+            {!user ? (
+              <Card className="max-w-2xl mx-auto p-12 text-center space-y-6 bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 border-primary/20">
+                <div className="space-y-4">
+                  <div className="text-6xl">🎰</div>
+                  <h1 className="text-4xl font-bold gradient-purple bg-clip-text text-transparent">
+                    Добро пожаловать в SlotsFight
+                  </h1>
+                  <p className="text-muted-foreground text-lg">
+                    Войди через Telegram, чтобы начать игру и сохранить свой прогресс
+                  </p>
+                </div>
+                <div className="flex justify-center pt-4">
+                  <TelegramAuth onAuth={(userData) => setUser(userData)} />
+                </div>
+                <div className="grid grid-cols-3 gap-4 pt-6">
+                  <div className="space-y-2">
+                    <div className="text-3xl">💎</div>
+                    <p className="text-sm font-bold">Слоты</p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-3xl">🎡</div>
+                    <p className="text-sm font-bold">Колесо</p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-3xl">🎟️</div>
+                    <p className="text-sm font-bold">Скретч</p>
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <>
+                <div className="text-center space-y-4">
+                  <h1 className="text-5xl font-bold gradient-purple bg-clip-text text-transparent">
+                    Добро пожаловать, {user.first_name}!
+                  </h1>
+                  <p className="text-muted-foreground text-lg">
+                    Испытай удачу в увлекательных играх и выиграй крупный приз!
+                  </p>
+                </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="p-6 hover:scale-105 transition-transform cursor-pointer bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20" onClick={() => setActiveTab('slots')}>
@@ -173,18 +217,20 @@ const Index = () => {
               </Card>
             </div>
 
-            <Card className="p-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 border-primary/20">
-              <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold">Реферальная программа</h3>
-                  <p className="text-muted-foreground">Приглашай друзей и получай бонусы</p>
-                </div>
-                <Button size="lg" className="gradient-gold">
-                  <Icon name="Share2" size={18} className="mr-2" />
-                  Пригласить друга
-                </Button>
-              </div>
-            </Card>
+                <Card className="p-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 border-primary/20">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold">Реферальная программа</h3>
+                      <p className="text-muted-foreground">Приглашай друзей и получай бонусы</p>
+                    </div>
+                    <Button size="lg" className="gradient-gold">
+                      <Icon name="Share2" size={18} className="mr-2" />
+                      Пригласить друга
+                    </Button>
+                  </div>
+                </Card>
+              </>
+            )}
           </TabsContent>
 
           <TabsContent value="slots" className="animate-fade-in">
