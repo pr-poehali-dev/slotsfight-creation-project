@@ -117,6 +117,19 @@ const TelegramAuth = ({ onAuth }: TelegramAuthProps) => {
     );
   }
 
+  const handleDemoLogin = () => {
+    const demoUser: TelegramUser = {
+      user_id: 123456789,
+      first_name: 'Demo',
+      last_name: 'Player',
+      username: 'demo_player',
+      authenticated: true
+    };
+    setUser(demoUser);
+    localStorage.setItem('telegram_user', JSON.stringify(demoUser));
+    onAuth(demoUser);
+  };
+
   return (
     <div className="flex flex-col items-center gap-4">
       {loading && (
@@ -133,6 +146,16 @@ const TelegramAuth = ({ onAuth }: TelegramAuthProps) => {
       )}
       
       <div ref={telegramRef} className="telegram-login-widget" />
+      
+      <Button 
+        onClick={handleDemoLogin}
+        variant="outline"
+        size="sm"
+        className="mt-2"
+      >
+        <Icon name="Play" size={16} className="mr-2" />
+        Демо-режим
+      </Button>
     </div>
   );
 };

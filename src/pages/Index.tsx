@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,11 +17,14 @@ interface TelegramUser {
   authenticated: boolean;
 }
 
+const PLAYER_API_URL = 'https://functions.poehali.dev/d0f79b6a-c03e-41aa-91d9-d79f1b07dc06';
+
 const Index = () => {
   const [activeTab, setActiveTab] = useState('main');
   const [user, setUser] = useState<TelegramUser | null>(null);
   const [coins, setCoins] = useState(12450);
   const [rubies, setRubies] = useState(89);
+  const [loading, setLoading] = useState(false);
   const [wheelSpinning, setWheelSpinning] = useState(false);
   const [scratchCards, setScratchCards] = useState([
     { id: 1, revealed: false, prize: 500 },
@@ -53,15 +56,85 @@ const Index = () => {
     { rank: 5, name: 'DiamondHand', score: 65432, avatar: 'DH' },
   ];
 
+  useEffect(() => {
+    if (user) {
+      loadPlayerData(user.user_id);
+    }
+  }, [user]);
+
+  const loadPlayerData = async (telegramId: number) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${PLAYER_API_URL}?telegram_id=${telegramId}`);
+      
+      if (response.ok) {
+        const playerData = await response.json();
+        setCoins(playerData.coins || 12450);
+        setRubies(playerData.rubies || 89);
+      } else {
+        await createPlayer(telegramId);
+      }
+    } catch (error) {
+      console.error('Failed to load player data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createPlayer = async (telegramId: number) => {
+    try {
+      const response = await fetch(PLAYER_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          telegram_id: telegramId,
+          first_name: user?.first_name || 'Player',
+          last_name: user?.last_name,
+          username: user?.username,
+          photo_url: user?.photo_url
+        })
+      });
+      
+      if (response.ok) {
+        const playerData = await response.json();
+        setCoins(playerData.coins);
+        setRubies(playerData.rubies);
+      }
+    } catch (error) {
+      console.error('Failed to create player:', error);
+    }
+  };
+
+  const updateBalance = async (newCoins: number, newRubies?: number) => {
+    if (!user) return;
+    
+    try {
+      await fetch(PLAYER_API_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          telegram_id: user.user_id,
+          coins: newCoins,
+          rubies: newRubies !== undefined ? newRubies : rubies
+        })
+      });
+    } catch (error) {
+      console.error('Failed to update balance:', error);
+    }
+  };
+
   const spinWheel = () => {
     if (wheelSpinning || coins < 100) return;
     
     setWheelSpinning(true);
-    setCoins(prev => prev - 100);
+    const newCoins = coins - 100;
+    setCoins(newCoins);
     
     setTimeout(() => {
       const prize = Math.floor(Math.random() * 1000) + 100;
-      setCoins(prev => prev + prize);
+      const finalCoins = newCoins + prize;
+      setCoins(finalCoins);
+      updateBalance(finalCoins);
       setWheelSpinning(false);
     }, 3000);
   };
@@ -75,7 +148,9 @@ const Index = () => {
     const card = scratchCards.find(c => c.id === id);
     if (card && !card.revealed) {
       setTimeout(() => {
-        setCoins(prev => prev + card.prize);
+        const newCoins = coins + card.prize;
+        setCoins(newCoins);
+        updateBalance(newCoins);
       }, 300);
     }
   };

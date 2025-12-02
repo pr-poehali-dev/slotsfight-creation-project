@@ -1,0 +1,37 @@
+{
+  "tests": [
+    {
+      "name": "Test OPTIONS for CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Test GET without telegram_id returns 400",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "telegram_id required"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test POST creates new player",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "telegram_id": 999888777,
+        "first_name": "TestPlayer",
+        "username": "test_player"
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "telegram_id": 999888777,
+        "first_name": "TestPlayer",
+        "coins": 12450
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
